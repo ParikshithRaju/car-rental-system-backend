@@ -27,7 +27,7 @@ class Cars(db.Model):
             "id": self.id,
             "brand": self.brand,
             "description": self.description,
-            "image": str(image_bs4_string),
+            "image": image_bs4_string.decode("utf-8"),
             "bookings": list(map(lambda booking: booking.makeDict(), self.bookings))
         }
 
