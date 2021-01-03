@@ -3,7 +3,7 @@ import json
 from flask import request
 from datetime import datetime
 
-from main import Cars, Bookings, Users, Bills, db
+from main import Cars, Bookings, Users, Bills, Locations, db
 
 app = Flask(__name__)
 
@@ -19,6 +19,12 @@ def getUser(id):
     userObj = Users.query.get(id)
     return json.dumps(userObj.makeDict())
 
+
+@app.route('/getAllUsers')
+def getAllUsers():
+    userObjList = Users.query.all()
+    userList = list(map(lambda user: user.makeDict(),userObjList))
+    return json.dumps(userList)
 
 @app.route('/getAllCars')
 def cars():
@@ -48,13 +54,14 @@ def addBooking():
     bookingObj = request.get_json()
     newBill = Bills(amount=float(bookingObj["billingPrice"]))
     db.session.add(newBill)
+    newLocation = Locations(address=bookingObj["pickupLocation"])
+    db.session.add(newLocation)
     db.session.commit()
 
     newBooking = Bookings(
-        userId=bookingObj["userId"], carId=int(bookingObj["carId"]), billId=newBill.id,
+        userId=bookingObj["userId"], carId=int(bookingObj["carId"]), billId=newBill.id, locationId=newLocation.id,
         fromTime=datetime.fromtimestamp(int(bookingObj["fromTime"])),
         toTime=datetime.fromtimestamp(int(bookingObj["toTime"])),
-        pickupLocation=bookingObj["pickupLocation"],
     )
     db.session.add(newBooking)
     db.session.commit()

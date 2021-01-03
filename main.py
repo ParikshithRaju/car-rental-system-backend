@@ -4,7 +4,8 @@ from datetime import datetime
 import base64
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://sql12383945:krqQaJ1XHb@sql12.freemysqlhosting.net/sql12383945'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://sql12383945:krqQaJ1XHb@sql12.freemysqlhosting.net/sql12383945'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://me:Wasupmynigga1#@localhost/car_rental_system'
 db = SQLAlchemy(app)
 
 
@@ -37,20 +38,32 @@ class Bookings(db.Model):
     userId = db.Column(db.String(100), db.ForeignKey('users.id'), nullable=False)
     carId = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
     billId = db.Column(db.Integer, db.ForeignKey('bills.id'), nullable=False)
+    locationId = db.Column(db.Integer, db.ForeignKey('locations.id'))
     fromTime = db.Column(db.DateTime)
     toTime = db.Column(db.DateTime)
-    pickupLocation = db.Column(db.Text)
 
     def makeDict(self):
-        return {
-            "id": self.id,
-            "userId": self.userId,
-            "carId": self.carId,
-            "fromTime": str(self.fromTime),
-            "toTime": str(self.toTime),
-            "pickupLocation": self.pickupLocation,
-            "billingPrice": self.bill.amount
-        }
+        if self.pickupLocation:
+            return {
+                "id": self.id,
+                "userId": self.userId,
+                "carId": self.carId,
+                "fromTime": str(self.fromTime),
+                "toTime": str(self.toTime),
+                "pickupLocation": self.pickupLocation.address,
+                "billingPrice": self.bill.amount
+            }
+        else:
+            return {
+                "id": self.id,
+                "userId": self.userId,
+                "carId": self.carId,
+                "fromTime": str(self.fromTime),
+                "toTime": str(self.toTime),
+                "pickupLocation": "none",
+                "billingPrice": self.bill.amount
+            }
+
 
 
 class Users(db.Model):
@@ -71,6 +84,12 @@ class Bills(db.Model):
     time = db.Column(db.DateTime, default=datetime.now)
     amount = db.Column(db.Float, nullable=False)
     booking = db.relationship('Bookings', backref="bill", lazy=True)
+
+
+class Locations(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    address = db.Column(db.Text,nullable=False)
+    booking = db.relationship('Bookings',backref="pickupLocation",lazy=True)
 
 
 if __name__ == '__main__':
